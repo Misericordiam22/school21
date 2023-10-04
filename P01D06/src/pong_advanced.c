@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <termios.h>
+#include <unistd.h>
 
 void draw_field(int ball_x, int ball_y, int rocket_left_y, int rocket_right, int rocket_left_x,
                 int rocket_right_x);
@@ -7,6 +9,10 @@ void draw_score(int player1_score, int player2_score);
 void print_win(int player1_score);
 
 char getch(void);
+void initTermios(int echo);
+char getch_(int echo);
+
+static struct termios old, current;
 
 int main() {
     int ball_x = 39;
@@ -18,7 +24,7 @@ int main() {
     while ((symbol != 'q') && (player1_score < 21 && player2_score < 21)) {
         draw_field(ball_x, ball_y, rocket_left_y, rocket_right_y, rocket_left_x, rocket_right_x);
         draw_score(player1_score, player2_score);
-        symbol = getchar();
+        symbol = getch();
         if (symbol == 'k' && rocket_right_y < 22)
             rocket_right_y++;
         else if (symbol == 'm' && rocket_right_y > 2)
@@ -93,6 +99,7 @@ void draw_field(int ball_x, int ball_y, int rocket_left_y, int rocket_right_y, i
         printf("\n");
     }
 }
+
 //Отрисовываем счёт
 void draw_score(int player1_score, int player2_score) {
     for (int y = 0; y <= 4; y++) {
@@ -110,6 +117,7 @@ void draw_score(int player1_score, int player2_score) {
                 if (x == 3 && y == 2) {
                     printf("PLAYER 1 %d", player1_score);
                 }
+
                 if (x == 42 && y == 2) {
                     printf("PLAYER 2 %d", player2_score);
                 }
@@ -119,6 +127,7 @@ void draw_score(int player1_score, int player2_score) {
         printf("\n");
     }
 }
+
 // Вывод победителя
 void print_win(int player1_score) {
     if (player1_score == 21) {
@@ -127,3 +136,46 @@ void print_win(int player1_score) {
         printf("Congratulations! Player2 WIN!!!");
     }
 }
+char getch(void) {
+    char buf = 0;
+    struct termios old1 = {0};
+    fflush(stdout);
+    if (tcgetattr(0, &old1) < 0) perror("tcsetattr()");
+    old1.c_lflag &= ~ICANON;
+    old1.c_lflag &= ~ECHO;
+    old1.c_cc[VMIN] = 1;
+    old1.c_cc[VTIME] = 0;
+    if (tcsetattr(0, TCSANOW, &old1) < 0) perror("tcsetattr ICANON");
+    if (read(0, &buf, 1) < 0) perror("read()");
+    old1.c_lflag |= ICANON;
+    old1.c_lflag |= ECHO;
+    if (tcsetattr(0, TCSADRAIN, &old1) < 0) perror("tcsetattr ~ICANON");
+    return buf;
+}
+
+// char getch_(int echo)
+// {
+//   char ch;
+//   initTermios(echo);
+//   ch = getchar();
+//   resetTermios();
+//   return ch;
+// }
+
+// /* Read 1 character without echo */
+// char getch(void)
+// {
+//   return getch_(0);
+// }
+// void initTermios(int echo)
+// {
+//   tcgetattr(0, &old); /* grab old terminal i/o settings */
+//   current = old; /* make new settings same as old settings */
+//   current.c_lflag &= ~ICANON; /* disable buffered i/o */
+//   if (echo) {
+//       current.c_lflag |= ECHO; /* set echo mode */
+//   } else {
+//       current.c_lflag &= ~ECHO; /* set no echo mode */
+//   }
+//   tcsetattr(0, TCSANOW, &current); /* use these new terminal i/o settings now */
+// }
