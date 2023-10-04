@@ -1,0 +1,11 @@
+used commands
+git add .
+git commit -m "fix"
+git push
+
+nano for read and edit txt
+cat for only read
+cd for broke in file
+ls for warch files
+chmod +x for permission
+
