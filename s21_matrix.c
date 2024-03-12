@@ -188,11 +188,11 @@ void fill_minor_matrix(matrix_t A, matrix_t *A_minor, int scale, int row,
   int skip_i = 0;
   int skip_j = 0;
   for (int i = 0; i < scale; i++) {
+    skip_j = 0;
     if (i == row) {
       skip_i = 1;
       continue;
     }
-    skip_j = 0;
     for (int j = 0; j < scale; j++) {
       if (j == column) {
         skip_j = 1;
